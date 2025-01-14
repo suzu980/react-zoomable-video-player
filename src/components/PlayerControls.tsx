@@ -1,4 +1,10 @@
-import { Dispatch, SetStateAction } from "react";
+import {
+  Dispatch,
+  MouseEventHandler,
+  SetStateAction,
+  useEffect,
+  useState,
+} from "react";
 import { Minus, Plus, SkipBack, SkipForward, Play, Pause } from "lucide-react";
 import ReactPlayer from "react-player";
 
@@ -11,6 +17,7 @@ interface PlayerControlsProps {
   played: number;
   setPlayed: Dispatch<SetStateAction<number>>;
   frameTime: number;
+  setSeeking: Dispatch<SetStateAction<boolean>>;
 }
 
 const PlayerControls = ({
@@ -22,6 +29,7 @@ const PlayerControls = ({
   frameTime = 1 / 30,
   played,
   setPlayed,
+  setSeeking,
 }: PlayerControlsProps) => {
   const handleFrameStep = (forward = true) => {
     const player = playerRef.current;
@@ -30,12 +38,13 @@ const PlayerControls = ({
       player.seekTo(currentTime + (forward ? frameTime : -frameTime));
     }
   };
+
   return (
-    <div className="w-full max-w-4xl mx-auto p-4">
+    <div className="w-full max-w-4xl mx-auto p-2">
       {/* Control Panel */}
       <div className="mt-4 p-4 bg-gray-100 rounded-lg">
         {/* Playback Controls */}
-        <div className="flex items-center justify-center space-x-4 mb-4">
+        <div className="flex items-center justify-center space-x-4 mb-1">
           <button
             onClick={() => handleFrameStep(false)}
             className="p-2 hover:bg-gray-200 rounded"
@@ -63,7 +72,7 @@ const PlayerControls = ({
         </div>
 
         {/* Speed Controls */}
-        <div className="flex items-center justify-center space-x-4 mb-4">
+        <div className="flex items-center justify-center space-x-4 mb-1">
           <button
             onClick={() =>
               setPlaybackRate((rate) => Math.max(0.25, rate - 0.25))
@@ -90,13 +99,20 @@ const PlayerControls = ({
           <input
             type="range"
             min={0}
-            max={1}
-            step="any"
+            max={0.999999}
+            step={"any"}
             value={played}
+            onMouseDown={(e) => {
+              setSeeking(true);
+            }}
+            onMouseUp={(e: React.MouseEvent<HTMLInputElement>) => {
+              setSeeking(false);
+              const value = (e.target as HTMLInputElement).value;
+              playerRef.current?.seekTo(parseFloat(value));
+            }}
             onChange={(e) => {
-              const time = parseFloat(e.target.value);
-              playerRef.current?.seekTo(time);
-              setPlayed(time);
+              const value = parseFloat(e.target.value);
+              setPlayed(value);
             }}
             className="w-full"
           />

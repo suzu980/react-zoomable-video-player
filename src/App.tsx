@@ -10,6 +10,7 @@ function App() {
   const [playing, setPlaying] = useState(false);
   const [played, setPlayed] = useState(0);
   const [playbackRate, setPlaybackRate] = useState(1);
+  const [seeking, setSeeking] = useState(false);
 
   const frameTime = 1 / 30;
 
@@ -28,6 +29,7 @@ function App() {
   };
 
   const playerRef = useRef<ReactPlayer>(null);
+
   return (
     <>
       <div className="p-4">
@@ -41,6 +43,7 @@ function App() {
           >
             <ReactPlayer
               ref={playerRef}
+              loop={false}
               controls={false}
               style={{ pointerEvents: "none" }}
               config={{
@@ -50,7 +53,11 @@ function App() {
               }}
               playing={playing}
               playbackRate={playbackRate}
-              onProgress={({ played }) => setPlayed(played)}
+              onProgress={({ played }) => {
+                if (!seeking) setPlayed(played);
+              }}
+              onPause={() => setPlaying(false)}
+              onEnded={() => setPlaying(false)}
               width={"100%"}
               height={"100%"}
               url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
@@ -62,6 +69,7 @@ function App() {
             zoom={zoom}
           />
           <PlayerControls
+            setSeeking={setSeeking}
             playerRef={playerRef}
             playing={playing}
             setPlaying={setPlaying}
