@@ -45,7 +45,7 @@ function App() {
               ref={playerRef}
               loop={false}
               controls={false}
-              style={{ pointerEvents: "none" }}
+              style={{ pointerEvents: "none", userSelect: "none" }}
               config={{
                 file: {
                   attributes: { disablePictureInPicture: true },
