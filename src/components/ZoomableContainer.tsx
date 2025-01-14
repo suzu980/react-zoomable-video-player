@@ -36,6 +36,14 @@ const ZoomableContainer = ({
       lastMousePos.current = { x: e.clientX, y: e.clientY };
     }
   };
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const clientX = e.touches[0].clientX;
+    const clientY = e.touches[0].clientY;
+    if (zoom > 1) {
+      setIsDragging(true);
+      lastMousePos.current = { x: clientX, y: clientY };
+    }
+  };
 
   useEffect(() => {
     const resizeObserver = new ResizeObserver(() => {
@@ -71,6 +79,23 @@ const ZoomableContainer = ({
     }
   };
 
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (isDragging && zoom > 1 && containerRef.current) {
+      const clientX = e.touches[0].clientX;
+      const clientY = e.touches[0].clientY;
+      console.log(clientX, clientY);
+      const deltaX = (clientX - lastMousePos.current.x) / zoom;
+      const deltaY = (clientY - lastMousePos.current.y) / zoom;
+
+      let newX = pan.x + deltaX;
+      let newY = pan.y + deltaY;
+
+      setPan({ x: newX, y: newY });
+
+      lastMousePos.current = { x: clientX, y: clientY };
+    }
+  };
+
   const handleMouseUp = () => {
     setIsDragging(false);
   };
@@ -81,8 +106,12 @@ const ZoomableContainer = ({
         "relative overflow-hidden aspect-video",
         "flex items-center justify-center",
         { "cursor-grabbing": isDragging },
+        "touch-none",
         className
       )}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleMouseUp}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}

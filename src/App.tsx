@@ -45,6 +45,7 @@ function App() {
               ref={playerRef}
               loop={false}
               controls={false}
+              volume={0}
               style={{ pointerEvents: "none", userSelect: "none" }}
               config={{
                 file: {
