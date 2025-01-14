@@ -1,12 +1,17 @@
+import { Dispatch, SetStateAction } from "react";
 import {
-  Dispatch,
-  MouseEventHandler,
-  SetStateAction,
-  useEffect,
-  useState,
-} from "react";
-import { Minus, Plus, SkipBack, SkipForward, Play, Pause } from "lucide-react";
+  SkipBack,
+  SkipForward,
+  Play,
+  Pause,
+  Volume,
+  Volume1,
+  Volume2,
+} from "lucide-react";
 import ReactPlayer from "react-player";
+import { cn } from "../utils/cn";
+import VideoSpeedControls from "./VideoSpeedControls";
+import Duration from "../helpers/Duration";
 
 interface PlayerControlsProps {
   playerRef: React.RefObject<ReactPlayer>;
@@ -18,6 +23,9 @@ interface PlayerControlsProps {
   setPlayed: Dispatch<SetStateAction<number>>;
   frameTime: number;
   setSeeking: Dispatch<SetStateAction<boolean>>;
+  volume: number;
+  setVolume: Dispatch<SetStateAction<number>>;
+  duration: number;
 }
 
 const PlayerControls = ({
@@ -30,6 +38,9 @@ const PlayerControls = ({
   played,
   setPlayed,
   setSeeking,
+  volume,
+  setVolume,
+  duration,
 }: PlayerControlsProps) => {
   const handleFrameStep = (forward = true) => {
     const player = playerRef.current;
@@ -38,64 +49,45 @@ const PlayerControls = ({
       player.seekTo(currentTime + (forward ? frameTime : -frameTime));
     }
   };
+  const buttonClasses =
+    "p-2 hover:bg-gray-200 rounded hover:dark:bg-gray-700 transition-colors";
 
   return (
     <div className="w-full max-w-4xl mx-auto p-2">
       {/* Control Panel */}
-      <div className="mt-4 p-4 bg-gray-100 rounded-lg">
-        {/* Playback Controls */}
-        <div className="flex items-center justify-center space-x-4 mb-1">
-          <button
-            onClick={() => handleFrameStep(false)}
-            className="p-2 hover:bg-gray-200 rounded"
-          >
-            <SkipBack className="w-6 h-6" />
-          </button>
-
-          <button
-            onClick={() => setPlaying(!playing)}
-            className="p-2 hover:bg-gray-200 rounded"
-          >
-            {playing ? (
-              <Pause className="w-6 h-6" />
-            ) : (
-              <Play className="w-6 h-6" />
-            )}
-          </button>
-
-          <button
-            onClick={() => handleFrameStep(true)}
-            className="p-2 hover:bg-gray-200 rounded"
-          >
-            <SkipForward className="w-6 h-6" />
-          </button>
+      <div className="mt-2 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg transition-colors">
+        <div className="flex justify-between">
+          <div className="flex items-center gap-x-2">
+            <button
+              onClick={() => (volume === 0 ? setVolume(0.5) : setVolume(0))}
+              className={cn(buttonClasses)}
+            >
+              {volume === 0 && <Volume />}
+              {volume > 0 && volume < 0.5 && <Volume1 />}
+              {volume >= 0.5 && <Volume2 />}
+            </button>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={"any"}
+              value={volume}
+              onChange={(e) => setVolume(parseFloat(e.target.value))}
+              className="w-full max-w-[100px] md:max-w-[200px]"
+            />
+          </div>
+          <VideoSpeedControls
+            playbackRate={playbackRate}
+            setPlaybackRate={setPlaybackRate}
+          />
         </div>
-
-        {/* Speed Controls */}
-        <div className="flex items-center justify-center space-x-4 mb-1">
-          <button
-            onClick={() =>
-              setPlaybackRate((rate) => Math.max(0.25, rate - 0.25))
-            }
-            className="p-2 hover:bg-gray-200 rounded"
-          >
-            <Minus className="w-6 h-6" />
-          </button>
-
-          <span className="text-sm font-medium select-none">
-            {playbackRate}x
-          </span>
-
-          <button
-            onClick={() => setPlaybackRate((rate) => Math.min(2, rate + 0.25))}
-            className="p-2 hover:bg-gray-200 rounded"
-          >
-            <Plus className="w-6 h-6" />
-          </button>
-        </div>
-
         {/* Progress Bar */}
         <div className="mt-4">
+          <Duration seconds={duration * played} />
+          {" / "}
+          <Duration seconds={duration} />
+        </div>
+        <div>
           <input
             type="range"
             min={0}
@@ -116,6 +108,32 @@ const PlayerControls = ({
             }}
             className="w-full"
           />
+        </div>
+        <div className="flex items-center justify-center space-x-4 mb-1">
+          <button
+            onClick={() => handleFrameStep(false)}
+            className={cn(buttonClasses)}
+          >
+            <SkipBack className="w-6 h-6" />
+          </button>
+
+          <button
+            onClick={() => setPlaying(!playing)}
+            className={cn(buttonClasses)}
+          >
+            {playing ? (
+              <Pause className="w-6 h-6" />
+            ) : (
+              <Play className="w-6 h-6" />
+            )}
+          </button>
+
+          <button
+            onClick={() => handleFrameStep(true)}
+            className={cn(buttonClasses)}
+          >
+            <SkipForward className="w-6 h-6" />
+          </button>
         </div>
       </div>
     </div>
