@@ -94,7 +94,7 @@ const PlayerControls = ({
             max={0.999999}
             step={"any"}
             value={played}
-            onMouseDown={(e) => {
+            onMouseDown={() => {
               setSeeking(true);
             }}
             onMouseUp={(e: React.MouseEvent<HTMLInputElement>) => {
