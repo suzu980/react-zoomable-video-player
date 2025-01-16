@@ -10,11 +10,12 @@ function App() {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [playing, setPlaying] = useState(false);
+  const [muted, setMuted] = useState(false);
   const [played, setPlayed] = useState(0);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [seeking, setSeeking] = useState(false);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(0);
+  const [volume, setVolume] = useState(0.2);
 
   const { isDark, toggleDarkMode } = useDark();
 
@@ -52,15 +53,17 @@ function App() {
               {isDark ? <Moon /> : <Sun />}
             </div>
           </div>
+
           <ZoomableContainer
             zoom={zoom}
             setPan={setPan}
             pan={pan}
-            className="max-h-[70vh] max-w-[1280px] w-full bg-black"
-            innerContainerClassName="max-h-[720px] max-w-[1280px]"
+            className="bg-black max-h-[70vh] max-w-[1280px] aspect-video"
           >
+            {/*Responsive player wrapper at 16:9 ratio*/}
             <ReactPlayer
               ref={playerRef}
+              muted={muted}
               loop={false}
               controls={false}
               volume={volume}
@@ -89,6 +92,8 @@ function App() {
             zoom={zoom}
           />
           <PlayerControls
+            muted={muted}
+            setMuted={setMuted}
             duration={duration}
             volume={volume}
             setVolume={setVolume}

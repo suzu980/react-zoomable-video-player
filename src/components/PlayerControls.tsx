@@ -7,6 +7,7 @@ import {
   Volume,
   Volume1,
   Volume2,
+  VolumeOff,
 } from "lucide-react";
 import ReactPlayer from "react-player";
 import { cn } from "../utils/cn";
@@ -26,6 +27,8 @@ interface PlayerControlsProps {
   volume: number;
   setVolume: Dispatch<SetStateAction<number>>;
   duration: number;
+  muted: boolean;
+  setMuted: Dispatch<SetStateAction<boolean>>;
 }
 
 const PlayerControls = ({
@@ -41,6 +44,8 @@ const PlayerControls = ({
   volume,
   setVolume,
   duration,
+  muted,
+  setMuted,
 }: PlayerControlsProps) => {
   const handleFrameStep = (forward = true) => {
     const player = playerRef.current;
@@ -59,12 +64,18 @@ const PlayerControls = ({
         <div className="flex justify-between">
           <div className="flex items-center gap-x-2">
             <button
-              onClick={() => (volume === 0 ? setVolume(0.5) : setVolume(0))}
+              onClick={() => setMuted(!muted)}
               className={cn(buttonClasses)}
             >
-              {volume === 0 && <Volume />}
-              {volume > 0 && volume < 0.5 && <Volume1 />}
-              {volume >= 0.5 && <Volume2 />}
+              {muted ? (
+                <VolumeOff />
+              ) : (
+                <>
+                  {volume === 0 && <Volume />}
+                  {volume > 0 && volume < 0.5 && <Volume1 />}
+                  {volume >= 0.5 && <Volume2 />}
+                </>
+              )}
             </button>
             <input
               type="range"

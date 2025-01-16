@@ -1,10 +1,4 @@
-import React, {
-  Dispatch,
-  SetStateAction,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { Dispatch, SetStateAction, useRef, useState } from "react";
 import { cn } from "../utils/cn";
 
 interface ZoomableContainerProps {
@@ -15,6 +9,38 @@ interface ZoomableContainerProps {
   innerContainerClassName?: string;
   className?: string;
 }
+const calculateConstraints = (
+  newX: number,
+  newY: number,
+  zoom: number,
+  container: HTMLElement,
+  content: HTMLElement
+) => {
+  const containerWidth = container.clientWidth;
+  const containerHeight = container.clientHeight;
+  const contentWidth = content.offsetWidth * zoom;
+  const contentHeight = content.offsetHeight * zoom;
+
+  // Constrain pan horizontally (x-axis)
+  const maxX = (contentWidth - containerWidth) / 2; // Left boundary (no panning left)
+  const maxY = (contentHeight - containerHeight) / 2; // Top boundary (no panning up)
+  const positiveX = newX > 0;
+  const positiveY = newY > 0;
+  const isXConstrained = Math.abs(newX * zoom) > maxX;
+  const isYConstrained = Math.abs(newY * zoom) > maxY;
+  const constrainedX = isXConstrained
+    ? positiveX
+      ? maxX / zoom
+      : -maxX / zoom
+    : newX;
+  const constrainedY = isYConstrained
+    ? positiveY
+      ? maxY / zoom
+      : -maxY / zoom
+    : newY;
+  return { constrainedX, constrainedY };
+};
+
 const ZoomableContainer = ({
   children,
   zoom,
@@ -24,10 +50,7 @@ const ZoomableContainer = ({
   className,
 }: ZoomableContainerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [containerSize, setContainerSize] = useState<{
-    width: number;
-    height: number;
-  }>({ width: 0, height: 0 });
+  const contentRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const lastMousePos = useRef({ x: 0, y: 0 });
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -45,52 +68,44 @@ const ZoomableContainer = ({
     }
   };
 
-  useEffect(() => {
-    const resizeObserver = new ResizeObserver(() => {
-      if (containerRef.current) {
-        const width = containerRef.current.clientWidth;
-        const height = containerRef.current.clientHeight;
-        setContainerSize({ width, height });
-      }
-    });
-
-    if (containerRef.current) {
-      resizeObserver.observe(containerRef.current);
-    }
-
-    return () => {
-      if (containerRef.current) {
-        resizeObserver.unobserve(containerRef.current);
-      }
-    };
-  }, []);
-
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (isDragging && zoom > 1 && containerRef.current) {
+    if (isDragging && zoom > 1 && containerRef.current && contentRef.current) {
       const deltaX = (e.clientX - lastMousePos.current.x) / zoom;
       const deltaY = (e.clientY - lastMousePos.current.y) / zoom;
 
       let newX = pan.x + deltaX;
       let newY = pan.y + deltaY;
-
-      setPan({ x: newX, y: newY });
+      const { constrainedX, constrainedY } = calculateConstraints(
+        newX,
+        newY,
+        zoom,
+        containerRef.current,
+        contentRef.current
+      );
+      setPan({ x: constrainedX, y: constrainedY });
 
       lastMousePos.current = { x: e.clientX, y: e.clientY };
     }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    if (isDragging && zoom > 1 && containerRef.current) {
+    if (isDragging && zoom > 1 && containerRef.current && contentRef.current) {
       const clientX = e.touches[0].clientX;
       const clientY = e.touches[0].clientY;
-      console.log(clientX, clientY);
       const deltaX = (clientX - lastMousePos.current.x) / zoom;
       const deltaY = (clientY - lastMousePos.current.y) / zoom;
 
       let newX = pan.x + deltaX;
       let newY = pan.y + deltaY;
+      const { constrainedX, constrainedY } = calculateConstraints(
+        newX,
+        newY,
+        zoom,
+        containerRef.current,
+        contentRef.current
+      );
 
-      setPan({ x: newX, y: newY });
+      setPan({ x: constrainedX, y: constrainedY });
 
       lastMousePos.current = { x: clientX, y: clientY };
     }
@@ -103,8 +118,9 @@ const ZoomableContainer = ({
     <div
       ref={containerRef}
       className={cn(
-        "relative overflow-hidden aspect-video",
-        "flex items-center justify-center",
+        "bg-black",
+        "h-full w-full",
+        "overflow-hidden",
         { "cursor-grabbing": isDragging },
         "touch-none",
         className
@@ -118,15 +134,15 @@ const ZoomableContainer = ({
       onMouseLeave={handleMouseUp}
     >
       <div
+        ref={contentRef}
         style={{
           transform: `scale(${zoom}) translate(${pan.x}px, ${pan.y}px)`,
-          transition: isDragging ? "none" : "transform 0.1s",
-          width: containerSize.width,
-          height: containerSize.height,
+          transition: isDragging ? "none" : "transform 0.25s",
         }}
         className={cn(
-          "origin-center pointer-events-none aspect-video",
-          innerContainerClassName
+          "origin-center pointer-events-none ",
+          innerContainerClassName,
+          "h-full w-full"
         )}
       >
         {children}
