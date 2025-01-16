@@ -1,4 +1,10 @@
-import React, { Dispatch, SetStateAction, useRef, useState } from "react";
+import React, {
+  Dispatch,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { cn } from "../utils/cn";
 
 interface ZoomableContainerProps {
@@ -110,6 +116,19 @@ const ZoomableContainer = ({
       lastMousePos.current = { x: clientX, y: clientY };
     }
   };
+  useEffect(() => {
+    console.log(zoom);
+    if (containerRef.current && contentRef.current) {
+      const { constrainedX, constrainedY } = calculateConstraints(
+        pan.x,
+        pan.y,
+        zoom,
+        containerRef.current,
+        contentRef.current
+      );
+      setPan({ x: constrainedX, y: constrainedY });
+    }
+  }, [zoom]);
 
   const handleMouseUp = () => {
     setIsDragging(false);
@@ -122,7 +141,7 @@ const ZoomableContainer = ({
         "h-full w-full",
         "overflow-hidden",
         { "cursor-grabbing": isDragging },
-        "touch-none",
+        "touch-none select-none",
         className
       )}
       onTouchStart={handleTouchStart}
